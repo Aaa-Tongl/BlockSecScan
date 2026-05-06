@@ -1,7 +1,6 @@
 """Scanner abstract base class and registry."""
 
 from abc import ABC, abstractmethod
-from typing import List
 
 from blocksec.models.finding import Finding
 
@@ -18,6 +17,6 @@ class BaseScanner(ABC):
         ...
 
     @abstractmethod
-    def scan(self, target_path: str) -> List[Finding]:
+    def scan(self, target_path: str) -> list[Finding]:
         """执行扫描，返回 Finding 列表。"""
         ...

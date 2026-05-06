@@ -1,0 +1,25 @@
+id: FABRIC_DEBUG_LOG_ENABLED
+name: 开启 DEBUG 日志级别
+category: Fabric Configuration
+severity: LOW
+version: "1.0.0"
+target:
+  type: env_or_yaml
+  files:
+    - docker-compose.yaml
+    - docker-compose.yml
+    - .env
+    - core.yaml
+match:
+  type: key_value
+  file_pattern: "*"
+  key: FABRIC_LOGGING_SPEC
+  value: "debug"
+  case_sensitive: false
+  negate: false
+description: "Fabric 日志级别设置为 DEBUG，可能泄露交易内容、证书路径、链码调用参数等敏感信息到日志文件中。"
+remediation: "生产环境中将 FABRIC_LOGGING_SPEC 设置为 INFO 或 WARNING。开发调试结束后应及时恢复。"
+references:
+  - https://hyperledger-fabric.readthedocs.io/en/latest/logging-control.html
+false_positive_note: "开发和调试阶段开启 DEBUG 日志属于正常行为。"
+enabled: true

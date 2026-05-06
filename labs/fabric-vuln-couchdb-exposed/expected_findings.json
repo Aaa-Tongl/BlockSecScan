@@ -1,0 +1,14 @@
+{
+  "expected_critical": 0,
+  "expected_high": 5,
+  "expected_medium": 1,
+  "expected_low": 1,
+  "expected_info": 0,
+  "rule_ids": [
+    "FABRIC_PEER_TLS_DISABLED",
+    "FABRIC_ORDERER_TLS_DISABLED",
+    "FABRIC_COUCHDB_EXPOSED",
+    "FABRIC_PLAINTEXT_PASSWORD",
+    "FABRIC_DEBUG_LOG_ENABLED"
+  ]
+}
