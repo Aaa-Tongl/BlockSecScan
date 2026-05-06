@@ -48,11 +48,7 @@ class RuleEngine:
         for i, line in enumerate(lines, start=1):
             search_line = line if match.case_sensitive else line.lower()
 
-            match_found = (
-                not match.negate
-                if search_pattern in search_line
-                else match.negate
-            )
+            match_found = not match.negate if search_pattern in search_line else match.negate
 
             if match_found:
                 results.append((i, i, line.strip()))
@@ -74,11 +70,7 @@ class RuleEngine:
         lines = content.splitlines()
 
         for i, line in enumerate(lines, start=1):
-            match_found = (
-                not match.negate
-                if compiled.search(line)
-                else match.negate
-            )
+            match_found = not match.negate if compiled.search(line) else match.negate
 
             if match_found:
                 results.append((i, i, line.strip()))

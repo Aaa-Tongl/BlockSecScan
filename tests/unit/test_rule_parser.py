@@ -10,14 +10,28 @@ class TestRuleParser:
         rules = rp.load_rules(str(rules_dir))
 
         rule_ids = {r.id for r in rules}
-        expected = {
+        expected_config = {
             "FABRIC_PEER_TLS_DISABLED",
             "FABRIC_ORDERER_TLS_DISABLED",
             "FABRIC_COUCHDB_EXPOSED",
             "FABRIC_PLAINTEXT_PASSWORD",
             "FABRIC_DEBUG_LOG_ENABLED",
         }
-        assert rule_ids == expected, f"Expected {expected}, got {rule_ids}"
+        expected_runtime = {
+            "FABRIC_RUNTIME_CONTAINER_ROOT",
+            "FABRIC_RUNTIME_PRIVILEGED",
+            "FABRIC_RUNTIME_SENSITIVE_MOUNT",
+            "FABRIC_RUNTIME_HOST_NETWORK",
+            "FABRIC_RUNTIME_COUCHDB_ACCESSIBLE",
+            "FABRIC_RUNTIME_PORT_OPEN",
+            "FABRIC_RUNTIME_CERT_EXPIRY",
+        }
+        assert expected_config.issubset(rule_ids), (
+            f"Missing config rules: {expected_config - rule_ids}"
+        )
+        assert expected_runtime.issubset(rule_ids), (
+            f"Missing runtime rules: {expected_runtime - rule_ids}"
+        )
         assert all(r.enabled for r in rules)
 
     def test_rule_severity_values(self):

@@ -1,0 +1,167 @@
+{
+  "scan_id": "989f36f6-75dc-441b-a213-97da76745ac1",
+  "target": {
+    "type": "fabric_config",
+    "path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed"
+  },
+  "timestamp": "2026-05-06T16:42:19.079106",
+  "duration_seconds": 0.003,
+  "summary": {
+    "critical": 0,
+    "high": 5,
+    "medium": 1,
+    "low": 1,
+    "info": 0,
+    "total": 7
+  },
+  "findings": [
+    {
+      "id": "9abaf222-d721-4ff1-a824-57f63af7996a",
+      "rule_id": "FABRIC_COUCHDB_EXPOSED",
+      "severity": "HIGH",
+      "category": "FABRIC_CONFIG",
+      "title": "CouchDB 端口暴露到宿主机",
+      "description": "CouchDB 端口被映射到宿主机所有接口（非 localhost），攻击者可通过 http://host:5984 直接访问状态数据库，查看或篡改账本数据。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 38,
+        "end_line": 38
+      },
+      "evidence": "- \"5984:5984\"",
+      "remediation": "删除 CouchDB 的外部端口映射，或将端口绑定到 127.0.0.1（如 127.0.0.1:5984:5984），仅允许 Peer 容器通过 Docker 内部网络访问。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/couchdb_as_state_database.html"
+      ],
+      "confidence": 1.0,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    },
+    {
+      "id": "f5219490-e4ea-446d-88f1-478eb6cf6184",
+      "rule_id": "FABRIC_COUCHDB_EXPOSED",
+      "severity": "HIGH",
+      "category": "FABRIC_CONFIG",
+      "title": "CouchDB 端口暴露到宿主机",
+      "description": "CouchDB 端口被映射到宿主机所有接口（非 localhost），攻击者可通过 http://host:5984 直接访问状态数据库，查看或篡改账本数据。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 44,
+        "end_line": 44
+      },
+      "evidence": "- \"5985:5984\"",
+      "remediation": "删除 CouchDB 的外部端口映射，或将端口绑定到 127.0.0.1（如 127.0.0.1:5984:5984），仅允许 Peer 容器通过 Docker 内部网络访问。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/couchdb_as_state_database.html"
+      ],
+      "confidence": 1.0,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    },
+    {
+      "id": "af30da04-ec18-40e0-a1e9-96bf70f36981",
+      "rule_id": "FABRIC_DEBUG_LOG_ENABLED",
+      "severity": "LOW",
+      "category": "FABRIC_CONFIG",
+      "title": "开启 DEBUG 日志级别",
+      "description": "Fabric 日志级别设置为 DEBUG，可能泄露交易内容、证书路径、链码调用参数等敏感信息到日志文件中。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 12,
+        "end_line": 12
+      },
+      "evidence": "- FABRIC_LOGGING_SPEC=DEBUG",
+      "remediation": "生产环境中将 FABRIC_LOGGING_SPEC 设置为 INFO 或 WARNING。开发调试结束后应及时恢复。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/logging-control.html"
+      ],
+      "confidence": 0.6,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    },
+    {
+      "id": "1be7a1a2-0ae9-43f5-a75c-05b104381701",
+      "rule_id": "FABRIC_PLAINTEXT_PASSWORD",
+      "severity": "MEDIUM",
+      "category": "FABRIC_CONFIG",
+      "title": "配置文件中存在明文密码",
+      "description": "配置文件中检测到可能的明文密码或密钥，密码泄露后攻击者可直接访问相关服务。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 13,
+        "end_line": 13
+      },
+      "evidence": "- CORE_PEER_PASSWORD=mypeerpassword123",
+      "remediation": "使用环境变量或密钥管理服务（如 HashiCorp Vault）存储密码，不在配置文件中硬编码。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/deployguide/limitations.html"
+      ],
+      "confidence": 1.0,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    },
+    {
+      "id": "4ab0cf42-b633-426b-ab6b-7de97f363313",
+      "rule_id": "FABRIC_ORDERER_TLS_DISABLED",
+      "severity": "HIGH",
+      "category": "FABRIC_CONFIG",
+      "title": "Orderer 节点未开启 TLS",
+      "description": "Orderer 排序节点未开启 TLS，排序服务通信可能被窃听或篡改，影响整个通道的区块分发安全。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 31,
+        "end_line": 31
+      },
+      "evidence": "- ORDERER_GENERAL_TLS_ENABLED=false",
+      "remediation": "将 ORDERER_GENERAL_TLS_ENABLED 设置为 true，并配置对应的 TLS 证书路径。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/enable_tls.html"
+      ],
+      "confidence": 1.0,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    },
+    {
+      "id": "d2f9602c-9fdb-4cc7-b20e-9e237d7b0423",
+      "rule_id": "FABRIC_PEER_TLS_DISABLED",
+      "severity": "HIGH",
+      "category": "FABRIC_CONFIG",
+      "title": "Peer 节点未开启 TLS",
+      "description": "Peer 节点未开启 TLS，节点间 gRPC 通信可能被中间人窃听或篡改。在生产环境中应始终开启 TLS。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 10,
+        "end_line": 10
+      },
+      "evidence": "- CORE_PEER_TLS_ENABLED=false",
+      "remediation": "将 CORE_PEER_TLS_ENABLED 设置为 true，并正确配置 CORE_PEER_TLS_CERT_FILE、CORE_PEER_TLS_KEY_FILE、CORE_PEER_TLS_ROOTCERT_FILE。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/enable_tls.html"
+      ],
+      "confidence": 1.0,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    },
+    {
+      "id": "e5f94139-f6de-4520-a091-fbd6b6f6dd1a",
+      "rule_id": "FABRIC_PEER_TLS_DISABLED",
+      "severity": "HIGH",
+      "category": "FABRIC_CONFIG",
+      "title": "Peer 节点未开启 TLS",
+      "description": "Peer 节点未开启 TLS，节点间 gRPC 通信可能被中间人窃听或篡改。在生产环境中应始终开启 TLS。",
+      "location": {
+        "file_path": "C:\\Users\\Feces\\Desktop\\Codex\\labs\\fabric-vuln-couchdb-exposed\\docker-compose.yaml",
+        "start_line": 23,
+        "end_line": 23
+      },
+      "evidence": "- CORE_PEER_TLS_ENABLED=false",
+      "remediation": "将 CORE_PEER_TLS_ENABLED 设置为 true，并正确配置 CORE_PEER_TLS_CERT_FILE、CORE_PEER_TLS_KEY_FILE、CORE_PEER_TLS_ROOTCERT_FILE。",
+      "references": [
+        "https://hyperledger-fabric.readthedocs.io/en/latest/enable_tls.html"
+      ],
+      "confidence": 1.0,
+      "scanner_name": "fabric_config",
+      "fix_available": true
+    }
+  ],
+  "errors": []
+}

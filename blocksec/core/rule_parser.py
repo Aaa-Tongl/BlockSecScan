@@ -30,26 +30,28 @@ class RuleParser:
     def _load_single_file(self, file_path: Path) -> list[Rule] | None:
         try:
             with open(file_path, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-        except yaml.YAMLError as e:
-            print(f"Warning: Failed to parse {file_path}: {e}")
-            return None
+                raw = f.read()
         except OSError as e:
             print(f"Warning: Failed to read {file_path}: {e}")
             return None
 
-        if data is None:
+        documents: list[dict] = []
+        try:
+            docs = yaml.safe_load_all(raw)
+            for doc in docs:
+                if isinstance(doc, dict):
+                    documents.append(doc)
+                elif isinstance(doc, list):
+                    documents.extend(doc)
+        except yaml.YAMLError as e:
+            print(f"Warning: Failed to parse {file_path}: {e}")
             return None
 
-        if isinstance(data, list):
-            rules_data = data
-        elif isinstance(data, dict):
-            rules_data = [data]
-        else:
+        if not documents:
             return None
 
         results: list[Rule] = []
-        for item in rules_data:
+        for item in documents:
             try:
                 rule = self._parse_rule_dict(item, file_path)
                 results.append(rule)

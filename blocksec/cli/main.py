@@ -7,7 +7,7 @@ from rich.panel import Panel
 from rich.table import Table
 from typer import Argument, Option, Typer
 
-from blocksec.api import scan_fabric
+from blocksec.api import scan_fabric, scan_fabric_runtime
 from blocksec.reports.exporters.json_exporter import JsonExporter
 
 app = Typer(
@@ -16,17 +16,24 @@ app = Typer(
 )
 console = Console()
 
+VALID_TARGETS: dict[str, str] = {
+    "fabric": "Fabric 配置文件扫描",
+    "fabric-runtime": "Fabric 运行时安全扫描",
+}
+
 
 @app.command()
 def scan(
-    target_type: str = Argument("fabric", help="扫描类型: fabric"),
+    target_type: str = Argument("fabric", help="扫描类型: fabric / fabric-runtime"),
     path: str = Option(".", "--path", "-p", help="要扫描的目录路径"),
     output: str | None = Option(None, "--output", "-o", help="输出报告文件路径（JSON）"),
 ):
     """运行安全扫描"""
-    if target_type != "fabric":
+    if target_type not in VALID_TARGETS:
         console.print(f"[red]不支持的扫描类型: {target_type}[/red]")
-        console.print("当前支持: fabric")
+        console.print("支持的类型:")
+        for t, desc in VALID_TARGETS.items():
+            console.print(f"  {t}: {desc}")
         raise SystemExit(1)
 
     scan_path = Path(path).resolve()
@@ -34,8 +41,15 @@ def scan(
         console.print(f"[red]路径不存在: {scan_path}[/red]")
         raise SystemExit(1)
 
-    with console.status(f"[bold green]正在扫描 Fabric 配置: {scan_path}..."):
-        result = scan_fabric(str(scan_path))
+    if target_type == "fabric":
+        scan_func = scan_fabric
+    elif target_type == "fabric-runtime":
+        scan_func = scan_fabric_runtime
+    else:
+        return
+
+    with console.status(f"[bold green]正在扫描 ({target_type}): {scan_path}..."):
+        result = scan_func(str(scan_path))
 
     _print_scan_result(result)
 

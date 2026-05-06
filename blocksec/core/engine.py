@@ -5,6 +5,7 @@ from blocksec.models.finding import Finding
 from blocksec.models.scan import FindingSummary, ScanResult, ScanTarget
 from blocksec.scanners.base import BaseScanner
 from blocksec.scanners.fabric_config.scanner import FabricConfigScanner
+from blocksec.scanners.fabric_runtime.scanner import FabricRuntimeScanner
 
 
 class CoreEngine:
@@ -17,10 +18,13 @@ class CoreEngine:
         self._register_default_scanners()
 
     def _register_default_scanners(self) -> None:
-        """注册默认扫描器。"""
         rules_dir = self._rules_dir or str(Path(__file__).parent.parent / "rules")
-        fabric_scanner = FabricConfigScanner(rules_dir=str(Path(rules_dir) / "fabric"))
-        self._scanners.append(fabric_scanner)
+
+        config_scanner = FabricConfigScanner(rules_dir=str(Path(rules_dir) / "fabric"))
+        self._scanners.append(config_scanner)
+
+        runtime_scanner = FabricRuntimeScanner()
+        self._scanners.append(runtime_scanner)
 
     def register_scanner(self, scanner: BaseScanner) -> None:
         self._scanners.append(scanner)
