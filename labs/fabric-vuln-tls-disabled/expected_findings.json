@@ -1,0 +1,10 @@
+{
+  "target": "fabric-vuln-tls-disabled",
+  "expected_rule_ids": [
+    "FABRIC_PEER_TLS_DISABLED",
+    "FABRIC_DOCKER_SOCK_MOUNTED",
+    "FABRIC_DEBUG_LOG_ENABLED"
+  ],
+  "expected_min_high": 2,
+  "expected_min_medium": 1
+}

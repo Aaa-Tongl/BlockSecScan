@@ -1,0 +1,6 @@
+{
+  "target": "fabric-safe",
+  "expected_rule_ids": [],
+  "expected_min_high": 0,
+  "expected_min_medium": 0
+}
