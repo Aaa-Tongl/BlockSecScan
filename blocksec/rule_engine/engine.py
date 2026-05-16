@@ -8,7 +8,7 @@ from blocksec.models.rule import Rule
 
 
 class RuleEngine:
-    SUPPORTED_MATCH_TYPES = {"regex", "contains", "yaml_path", "file_name"}
+    SUPPORTED_MATCH_TYPES = {"regex", "contains", "yaml_path", "file_name", "certificate"}
 
     @staticmethod
     def match_file(file_path: str, content: str, rule: Rule) -> Finding | None:
@@ -104,6 +104,68 @@ class RuleEngine:
             return RuleEngine._build_finding(file_path, 1, 1, fname, rule)
 
         return None
+
+    @staticmethod
+    def _match_certificate(file_path: str, content: str, rule: Rule) -> Finding | None:
+        from blocksec.utils.cert_check import (
+            get_cert_info,
+            load_certificate,
+        )
+
+        cert = load_certificate(file_path)
+        if cert is None:
+            return None
+
+        info = get_cert_info(cert)
+        issues: list[str] = []
+
+        if info["expired"]:
+            issues.append(f"Certificate expired. Not after: {info['not_after']}")
+        elif info["expiring_soon"]:
+            issues.append(f"Certificate expiring soon ({info['days_remaining']} days). Not after: {info['not_after']}")
+
+        algo = info["algorithm"]
+        if algo["issues"]:
+            issues.extend(algo["issues"])
+
+        if not issues:
+            return None
+
+        severity = "HIGH" if info["expired"] else "MEDIUM"
+        evidence = f"Subject: {info['subject_cn']} | Issuer: {info['issuer_cn']} | Expires: {info['not_after']}"
+
+        severity_map = {
+            "CRITICAL": Severity.CRITICAL,
+            "HIGH": Severity.HIGH,
+            "MEDIUM": Severity.MEDIUM,
+            "LOW": Severity.LOW,
+            "INFO": Severity.INFO,
+        }
+        category_map = {
+            "fabric_config": Category.FABRIC_CONFIG,
+            "fabric_runtime": Category.FABRIC_RUNTIME,
+            "chaincode": Category.CHAINCODE,
+            "contract": Category.CONTRACT,
+            "rpc": Category.RPC,
+            "web3": Category.WEB3,
+        }
+        confidence_map = {"HIGH": 0.9, "MEDIUM": 0.7, "LOW": 0.5}
+
+        return Finding(
+            rule_id=rule.id,
+            severity=severity_map.get(severity, Severity.MEDIUM),
+            category=category_map.get(rule.category, Category.FABRIC_CONFIG),
+            title=f"{rule.name}: {'; '.join(issues)}",
+            description=rule.description,
+            file_path=file_path,
+            line_start=1,
+            line_end=1,
+            evidence=evidence,
+            remediation=rule.remediation,
+            references=rule.references,
+            confidence=confidence_map.get(rule.confidence.upper(), 0.9),
+            false_positive_note=rule.false_positive_note,
+        )
 
     @staticmethod
     def _build_finding(file_path: str, line_start: int, line_end: int, evidence: str, rule: Rule) -> Finding:
