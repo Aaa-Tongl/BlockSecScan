@@ -23,6 +23,8 @@ class CoreEngine:
             )
 
         rules = RuleParser.load_rules(self.rules_dir, category=target.target_type)
+        if not rules and target.target_type == "fabric_runtime":
+            rules = RuleParser.load_rules(self.rules_dir, category="fabric_config")
         findings = scanner.scan(target, rules)
         summary = self._build_summary(findings)
 

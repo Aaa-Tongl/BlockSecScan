@@ -20,9 +20,6 @@ def load_certificate(file_path: str) -> x509.Certificate | None:
     except (OSError, PermissionError):
         return None
 
-    if b"-----BEGIN CERTIFICATE-----" not in data:
-        return None
-
     try:
         return x509.load_pem_x509_certificate(data)
     except Exception:

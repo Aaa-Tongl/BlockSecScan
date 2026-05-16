@@ -10,6 +10,23 @@ from blocksec.models.rule import Rule
 class RuleEngine:
     SUPPORTED_MATCH_TYPES = {"regex", "contains", "yaml_path", "file_name", "certificate"}
 
+    SEVERITY_MAP = {
+        "CRITICAL": Severity.CRITICAL,
+        "HIGH": Severity.HIGH,
+        "MEDIUM": Severity.MEDIUM,
+        "LOW": Severity.LOW,
+        "INFO": Severity.INFO,
+    }
+    CATEGORY_MAP = {
+        "fabric_config": Category.FABRIC_CONFIG,
+        "fabric_runtime": Category.FABRIC_RUNTIME,
+        "chaincode": Category.CHAINCODE,
+        "contract": Category.CONTRACT,
+        "rpc": Category.RPC,
+        "web3": Category.WEB3,
+    }
+    CONFIDENCE_MAP = {"HIGH": 0.9, "MEDIUM": 0.7, "LOW": 0.5}
+
     @staticmethod
     def match_file(file_path: str, content: str, rule: Rule) -> Finding | None:
         if not rule.enabled:
@@ -82,7 +99,7 @@ class RuleEngine:
 
         expected = rule.match.patterns
         if not expected:
-            if value:
+            if value is not None:
                 return RuleEngine._build_finding(file_path, 1, 1, f"{pattern}: {value}", rule)
             return None
 
@@ -134,27 +151,10 @@ class RuleEngine:
         severity = "HIGH" if info["expired"] else "MEDIUM"
         evidence = f"Subject: {info['subject_cn']} | Issuer: {info['issuer_cn']} | Expires: {info['not_after']}"
 
-        severity_map = {
-            "CRITICAL": Severity.CRITICAL,
-            "HIGH": Severity.HIGH,
-            "MEDIUM": Severity.MEDIUM,
-            "LOW": Severity.LOW,
-            "INFO": Severity.INFO,
-        }
-        category_map = {
-            "fabric_config": Category.FABRIC_CONFIG,
-            "fabric_runtime": Category.FABRIC_RUNTIME,
-            "chaincode": Category.CHAINCODE,
-            "contract": Category.CONTRACT,
-            "rpc": Category.RPC,
-            "web3": Category.WEB3,
-        }
-        confidence_map = {"HIGH": 0.9, "MEDIUM": 0.7, "LOW": 0.5}
-
         return Finding(
             rule_id=rule.id,
-            severity=severity_map.get(severity, Severity.MEDIUM),
-            category=category_map.get(rule.category, Category.FABRIC_CONFIG),
+            severity=RuleEngine.SEVERITY_MAP.get(severity, Severity.MEDIUM),
+            category=RuleEngine.CATEGORY_MAP.get(rule.category, Category.FABRIC_CONFIG),
             title=f"{rule.name}: {'; '.join(issues)}",
             description=rule.description,
             file_path=file_path,
@@ -163,34 +163,16 @@ class RuleEngine:
             evidence=evidence,
             remediation=rule.remediation,
             references=rule.references,
-            confidence=confidence_map.get(rule.confidence.upper(), 0.9),
+            confidence=RuleEngine.CONFIDENCE_MAP.get(rule.confidence.upper(), 0.9),
             false_positive_note=rule.false_positive_note,
         )
 
     @staticmethod
     def _build_finding(file_path: str, line_start: int, line_end: int, evidence: str, rule: Rule) -> Finding:
-        severity_map = {
-            "CRITICAL": Severity.CRITICAL,
-            "HIGH": Severity.HIGH,
-            "MEDIUM": Severity.MEDIUM,
-            "LOW": Severity.LOW,
-            "INFO": Severity.INFO,
-        }
-        category_map = {
-            "fabric_config": Category.FABRIC_CONFIG,
-            "fabric_runtime": Category.FABRIC_RUNTIME,
-            "chaincode": Category.CHAINCODE,
-            "contract": Category.CONTRACT,
-            "rpc": Category.RPC,
-            "web3": Category.WEB3,
-        }
-
-        confidence_map = {"HIGH": 0.9, "MEDIUM": 0.7, "LOW": 0.5}
-
         return Finding(
             rule_id=rule.id,
-            severity=severity_map.get(rule.severity.upper(), Severity.INFO),
-            category=category_map.get(rule.category, Category.FABRIC_CONFIG),
+            severity=RuleEngine.SEVERITY_MAP.get(rule.severity.upper(), Severity.INFO),
+            category=RuleEngine.CATEGORY_MAP.get(rule.category, Category.FABRIC_CONFIG),
             title=rule.name,
             description=rule.description,
             file_path=file_path,
@@ -199,6 +181,6 @@ class RuleEngine:
             evidence=evidence,
             remediation=rule.remediation,
             references=rule.references,
-            confidence=confidence_map.get(rule.confidence.upper(), 0.7),
+            confidence=RuleEngine.CONFIDENCE_MAP.get(rule.confidence.upper(), 0.7),
             false_positive_note=rule.false_positive_note,
         )

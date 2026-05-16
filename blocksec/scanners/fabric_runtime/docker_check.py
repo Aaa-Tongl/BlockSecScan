@@ -86,17 +86,3 @@ def check_container_env(container: Container) -> list[dict]:
         if "ORDERER_GENERAL_TLS_ENABLED" in upper and "FALSE" in upper:
             issues.append({"var": var, "issue": "Orderer TLS disabled"})
     return issues
-
-
-def get_container_info(container: Container) -> dict:
-    """Return summarized info for a Fabric container."""
-    return {
-        "id": container.short_id,
-        "name": container.name,
-        "image": ", ".join(container.image.tags or [container.image.short_id]),
-        "status": container.status,
-        "runs_as_root": check_container_root(container),
-        "ports_exposed": check_ports_exposed(container),
-        "sensitive_mounts": check_sensitive_mounts(container),
-        "env_issues": check_container_env(container),
-    }

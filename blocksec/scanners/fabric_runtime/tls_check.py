@@ -60,8 +60,8 @@ def check_tls_handshake(host: str, port: int, timeout: float = 5.0) -> dict:
 
 
 def check_couchdb_accessibility(host: str, port: int = 5984, timeout: float = 3.0) -> dict:
-    """Check if CouchDB is accessible and potentially unauthenticated."""
-    result = {"reachable": False, "unauthorized_access": False, "error": None}
+    """Check if CouchDB is reachable on the network."""
+    result = {"reachable": False, "couchdb_detected": False, "error": None}
 
     try:
         sock = socket.create_connection((host, port), timeout=timeout)
@@ -73,8 +73,8 @@ def check_couchdb_accessibility(host: str, port: int = 5984, timeout: float = 3.
         response = sock.recv(4096)
         sock.close()
 
-        if b"couchdb" in response.lower() or b"200 OK" in response:
-            result["unauthorized_access"] = True
+        if b"couchdb" in response.lower():
+            result["couchdb_detected"] = True
     except (TimeoutError, ConnectionRefusedError, OSError) as e:
         result["error"] = str(e)
 

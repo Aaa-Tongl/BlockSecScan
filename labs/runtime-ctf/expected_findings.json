@@ -1,0 +1,15 @@
+{
+  "target": "runtime-ctf",
+  "description": "4个Fabric容器全部故意配置漏洞，模拟CTF靶机",
+  "expected_rule_ids": [
+    "FABRIC_PEER_TLS_DISABLED",
+    "FABRIC_ORDERER_TLS_DISABLED",
+    "FABRIC_COUCHDB_EXPOSED",
+    "FABRIC_COUCHDB_WEAK_PASSWORD",
+    "FABRIC_CONTAINER_RUNS_AS_ROOT",
+    "FABRIC_DOCKER_SOCK_MOUNTED",
+    "FABRIC_DEBUG_LOG_ENABLED"
+  ],
+  "expected_min_high": 4,
+  "expected_min_medium": 3
+}

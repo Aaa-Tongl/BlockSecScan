@@ -65,7 +65,7 @@ def scan_fabric_config(
     _print_result(result)
 
     actual_output = output or f"result.{fmt}"
-    generate_report(result, fmt=fmt, output_path=output)
+    generate_report(result, fmt=fmt, output_path=actual_output)
     console.print(f"\n[dim]Report saved to {actual_output}[/dim]")
 
 
@@ -101,7 +101,7 @@ def scan_fabric_runtime(
 
     if result.findings:
         actual_output = output or f"runtime-result.{fmt}"
-        generate_report(result, fmt=fmt, output_path=output)
+        generate_report(result, fmt=fmt, output_path=actual_output)
         console.print(f"\n[dim]Report saved to {actual_output}[/dim]")
 
 
@@ -149,7 +149,7 @@ def report(
     with open(input_path, encoding="utf-8") as f:
         data = json.load(f)
 
-    result = ScanResult(**data)
+    result = ScanResult.model_validate(data)
     generate_report(result, fmt=fmt, output_path=output)
     console.print(f"[green]Report generated ({fmt})[/green]")
 

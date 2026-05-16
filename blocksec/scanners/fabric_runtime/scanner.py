@@ -40,45 +40,53 @@ class FabricRuntimeScanner(BaseScanner):
             return findings
 
         active_rule_ids = {r.id for r in rules if r.enabled}
+        rules_by_id = {r.id: r for r in rules}
 
-        for container in get_fabric_containers(client):
+        try:
+            containers = get_fabric_containers(client)
+        except Exception:
+            return findings
+
+        for container in containers:
             tags = container.image.tags or [container.image.short_id]
             pf = f"container={container.name} image={', '.join(tags)}"
 
             if "FABRIC_CONTAINER_RUNS_AS_ROOT" in active_rule_ids and check_container_root(container):
-                findings.append(self._mk("FABRIC_CONTAINER_RUNS_AS_ROOT", "HIGH", pf, rules))
+                findings.append(self._mk("FABRIC_CONTAINER_RUNS_AS_ROOT", "HIGH", pf, rules_by_id))
 
             if "FABRIC_COUCHDB_EXPOSED" in active_rule_ids:
                 for port in check_ports_exposed(container):
                     if "5984" in port["container_port"]:
                         ev = f"{pf} host={port['host_ip']}:{port['host_port']}"
-                        findings.append(self._mk("FABRIC_COUCHDB_EXPOSED", "HIGH", ev, rules))
+                        findings.append(self._mk("FABRIC_COUCHDB_EXPOSED", "HIGH", ev, rules_by_id))
 
             if "FABRIC_DOCKER_SOCK_MOUNTED" in active_rule_ids:
                 for mount in check_sensitive_mounts(container):
                     if "docker.sock" in mount.get("source", ""):
                         ev = f"{pf} mount={mount['source']}:{mount['destination']}"
-                        findings.append(self._mk("FABRIC_DOCKER_SOCK_MOUNTED", "HIGH", ev, rules))
+                        findings.append(self._mk("FABRIC_DOCKER_SOCK_MOUNTED", "HIGH", ev, rules_by_id))
 
             if "FABRIC_SENSITIVE_HOST_MOUNT" in active_rule_ids:
                 for mount in check_sensitive_mounts(container):
                     if "docker.sock" not in mount.get("source", ""):
                         ev = f"{pf} mount={mount['source']}:{mount['destination']}"
-                        findings.append(self._mk("FABRIC_SENSITIVE_HOST_MOUNT", "HIGH", ev, rules))
+                        findings.append(self._mk("FABRIC_SENSITIVE_HOST_MOUNT", "HIGH", ev, rules_by_id))
 
             for env_issue in check_container_env(container):
+                ev = f"{pf} {env_issue['var']}"
                 if "DEBUG" in env_issue["issue"] and "FABRIC_DEBUG_LOG_ENABLED" in active_rule_ids:
-                    findings.append(self._mk("FABRIC_DEBUG_LOG_ENABLED", "MEDIUM", f"{pf} {env_issue['var']}", rules))
+                    findings.append(self._mk("FABRIC_DEBUG_LOG_ENABLED", "MEDIUM", ev, rules_by_id))
                 elif "TLS" in env_issue["issue"] and "FABRIC_PEER_TLS_DISABLED" in active_rule_ids:
-                    findings.append(self._mk("FABRIC_PEER_TLS_DISABLED", "HIGH", f"{pf} {env_issue['var']}", rules))
+                    findings.append(self._mk("FABRIC_PEER_TLS_DISABLED", "HIGH", ev, rules_by_id))
                 elif "Orderer TLS" in env_issue["issue"] and "FABRIC_ORDERER_TLS_DISABLED" in active_rule_ids:
-                    findings.append(self._mk("FABRIC_ORDERER_TLS_DISABLED", "HIGH", f"{pf} {env_issue['var']}", rules))
+                    findings.append(self._mk("FABRIC_ORDERER_TLS_DISABLED", "HIGH", ev, rules_by_id))
 
         return findings
 
     def _scan_remote_ports(self, host: str, rules: list[Rule]) -> list[Finding]:
         findings: list[Finding] = []
         active_rule_ids = {r.id for r in rules if r.enabled}
+        rules_by_id = {r.id: r for r in rules}
 
         for service, port in FABRIC_DEFAULT_PORTS.items():
             tls_result = check_tls_handshake(host, port)
@@ -89,25 +97,25 @@ class FabricRuntimeScanner(BaseScanner):
                     rule_id = "FABRIC_ORDERER_TLS_DISABLED"
                 if rule_id and rule_id in active_rule_ids:
                     ev = f"host={host}:{port} service={service} TLS not detected"
-                    findings.append(self._mk(rule_id, "HIGH", ev, rules))
+                    findings.append(self._mk(rule_id, "HIGH", ev, rules_by_id))
 
             if tls_result.get("certificate"):
                 cert = tls_result["certificate"]
                 if cert.get("expired") and "FABRIC_CERT_EXPIRED" in active_rule_ids:
                     ev = f"host={host}:{port} subject={cert['subject']} expires={cert['not_after']}"
-                    findings.append(self._mk("FABRIC_CERT_EXPIRED", "HIGH", ev, rules))
+                    findings.append(self._mk("FABRIC_CERT_EXPIRED", "HIGH", ev, rules_by_id))
 
         if "FABRIC_COUCHDB_EXPOSED" in active_rule_ids:
             couchdb = check_couchdb_accessibility(host)
-            if couchdb.get("unauthorized_access"):
-                ev = f"host={host}:5984 CouchDB accessible without auth"
-                findings.append(self._mk("FABRIC_COUCHDB_EXPOSED", "HIGH", ev, rules))
+            if couchdb.get("couchdb_detected"):
+                ev = f"host={host}:5984 CouchDB reachable on network"
+                findings.append(self._mk("FABRIC_COUCHDB_EXPOSED", "HIGH", ev, rules_by_id))
 
         return findings
 
     @staticmethod
-    def _mk(rule_id: str, default_severity: str, evidence: str, rules: list[Rule]) -> Finding:
-        matched_rule = next((r for r in rules if r.id == rule_id), None)
+    def _mk(rule_id: str, default_severity: str, evidence: str, rules_by_id: dict[str, Rule]) -> Finding:
+        matched_rule = rules_by_id.get(rule_id)
 
         if matched_rule is None:
             return Finding(

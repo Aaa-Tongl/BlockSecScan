@@ -1,0 +1,57 @@
+# ============================================================
+# BlockSecScan Runtime CTF 靶场
+#
+# 4个容器的漏洞Fabric环境，全部保持运行状态可被扫描。
+# 启动: docker-compose up -d
+# 扫描: blocksec scan fabric-runtime --local
+#
+# 预期检出:
+#   HIGH: TLS 关闭 x2, CouchDB暴露, CouchDB弱口令, docker.sock挂载, 敏感目录挂载
+#   MEDIUM: DEBUG 日志, 容器 root 运行 x3
+# ============================================================
+
+services:
+  peer0.org1.example.com:
+    image: fabric-peer:local
+    container_name: peer0.org1.example.com
+    user: root
+    environment:
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=false
+      - FABRIC_LOGGING_SPEC=DEBUG
+    command: tail -f /dev/null
+    ports:
+      - "0.0.0.0:7051:7051"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  orderer.example.com:
+    image: fabric-orderer:local
+    container_name: orderer.example.com
+    user: root
+    environment:
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - FABRIC_LOGGING_SPEC=DEBUG
+    command: tail -f /dev/null
+    ports:
+      - "0.0.0.0:7050:7050"
+
+  couchdb:
+    image: couchdb:3.3
+    container_name: couchdb
+    user: root
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
+    ports:
+      - "0.0.0.0:5984:5984"
+
+  fabric-ca:
+    image: hyperledger/fabric-ca:1.5
+    container_name: fabric-ca
+    user: root
+    environment:
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_DEBUG=true
+    ports:
+      - "0.0.0.0:7054:7054"
