@@ -1,0 +1,6 @@
+{
+  "target": "fabric-vuln-plaintext-password",
+  "expected_rule_ids": ["FABRIC_PLAINTEXT_PASSWORD"],
+  "expected_min_high": 0,
+  "expected_min_medium": 1
+}

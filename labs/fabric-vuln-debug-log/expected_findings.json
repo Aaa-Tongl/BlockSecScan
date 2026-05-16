@@ -1,0 +1,6 @@
+{
+  "target": "fabric-vuln-debug-log",
+  "expected_rule_ids": ["FABRIC_DEBUG_LOG_ENABLED"],
+  "expected_min_high": 0,
+  "expected_min_medium": 1
+}

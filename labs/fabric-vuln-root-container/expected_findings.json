@@ -1,0 +1,6 @@
+{
+  "target": "fabric-vuln-root-container",
+  "expected_rule_ids": ["FABRIC_CONTAINER_RUNS_AS_ROOT"],
+  "expected_min_high": 0,
+  "expected_min_medium": 1
+}

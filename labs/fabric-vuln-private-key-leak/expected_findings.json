@@ -1,0 +1,6 @@
+{
+  "target": "fabric-vuln-private-key-leak",
+  "expected_rule_ids": ["FABRIC_PRIVATE_KEY_IN_REPO"],
+  "expected_min_high": 1,
+  "expected_min_medium": 0
+}

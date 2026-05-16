@@ -1,0 +1,6 @@
+{
+  "target": "fabric-vuln-couchdb-exposed",
+  "expected_rule_ids": ["FABRIC_COUCHDB_EXPOSED", "FABRIC_COUCHDB_WEAK_PASSWORD"],
+  "expected_min_high": 2,
+  "expected_min_medium": 0
+}
