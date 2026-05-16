@@ -1,0 +1,56 @@
+- id: FABRIC_DEBUG_LOG_ENABLED
+  name: DEBUG log level in production
+  category: fabric_config
+  severity: MEDIUM
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/core.yaml"
+      - "**/orderer.yaml"
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+      - "**/.env"
+  match:
+    type: regex
+    pattern: 'FABRIC_LOGGING_SPEC\s*=\s*(DEBUG|debug|grpc=DEBUG)'
+    case_sensitive: false
+  description: >
+    Fabric logging is set to DEBUG level. Debug logs can expose sensitive
+    information including transaction contents, certificate details, and
+    internal network paths.
+  remediation: >
+    Set FABRIC_LOGGING_SPEC=INFO for production environments. Only use
+    DEBUG temporarily for troubleshooting.
+  false_positive_note: >
+    Debug logging is acceptable in development and testing environments.
+  tags:
+    - logging
+    - debug
+    - information-disclosure
+  enabled: true
+
+- id: FABRIC_WEAK_ENDORSEMENT_POLICY
+  name: Weak endorsement policy
+  category: fabric_config
+  severity: MEDIUM
+  confidence: MEDIUM
+  target:
+    file_globs:
+      - "**/configtx.yaml"
+      - "**/*.json"
+  match:
+    type: regex
+    pattern: '(Endorsement|endorsement).*(any|ANY|OutOf.*1)'
+    case_sensitive: false
+  description: >
+    An endorsement policy requiring only a single organization may be
+    configured. Weak endorsement policies reduce the trust guarantees
+    of the blockchain network.
+  remediation: >
+    Require endorsement from a majority or specific set of organizations.
+    Use AND policies rather than OR policies for critical transactions.
+  tags:
+    - policy
+    - endorsement
+    - governance
+  enabled: true

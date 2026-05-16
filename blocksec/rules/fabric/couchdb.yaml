@@ -1,0 +1,60 @@
+- id: FABRIC_COUCHDB_EXPOSED
+  name: CouchDB service exposed to host
+  category: fabric_config
+  severity: HIGH
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+  match:
+    type: regex
+    pattern: '(0\.0\.0\.0:)?5984\s*:\s*5984'
+    case_sensitive: false
+  description: >
+    CouchDB port 5984 is mapped to the host or external network. In a Fabric
+    network, CouchDB should only be reachable by the peer through an internal
+    Docker network. External exposure may allow unauthorized access to the
+    state database.
+  remediation: >
+    Remove the external port mapping and restrict CouchDB to the Docker
+    internal network. If external access is required, bind to 127.0.0.1
+    only and use firewall rules.
+  references:
+    - https://hyperledger-fabric.readthedocs.io/en/latest/couchdb_as_state_database.html
+  false_positive_note: >
+    May be acceptable in a local-only development or teaching lab, but should
+    not be used in production.
+  tags:
+    - couchdb
+    - exposure
+    - docker
+  enabled: true
+
+- id: FABRIC_COUCHDB_WEAK_PASSWORD
+  name: CouchDB weak or default credentials
+  category: fabric_config
+  severity: HIGH
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+      - "**/.env"
+  match:
+    type: regex
+    pattern: 'COUCHDB_(USER|PASSWORD)\s*=\s*(admin|password|couchdb|123456)'
+    case_sensitive: false
+  description: >
+    CouchDB is configured with weak or default credentials. Attackers can
+    easily guess these and gain unauthorized access to the state database.
+  remediation: >
+    Use strong, unique passwords for CouchDB. Consider using a secrets
+    management solution instead of hardcoding credentials.
+  references:
+    - https://docs.couchdb.org/en/stable/config/auth.html
+  tags:
+    - couchdb
+    - credentials
+    - weak-password
+  enabled: true

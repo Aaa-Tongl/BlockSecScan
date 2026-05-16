@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlockSecScan Report — {{ result.scan_id[:8] }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 2rem; }
+        h1 { color: #58a6ff; margin-bottom: 0.5rem; }
+        h2 { color: #f0f6fc; margin: 1.5rem 0 0.75rem; border-bottom: 1px solid #30363d; padding-bottom: 0.25rem; }
+        h3 { color: #f0f6fc; margin: 1rem 0 0.5rem; }
+        .meta { color: #8b949e; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .summary { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+        .summary-item { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 0.75rem 1.25rem; text-align: center; min-width: 80px; }
+        .summary-item .count { font-size: 1.5rem; font-weight: bold; }
+        .summary-item .label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; }
+        .critical { border-color: #ff7b72; } .critical .count { color: #ff7b72; }
+        .high { border-color: #f85149; } .high .count { color: #f85149; }
+        .medium { border-color: #d29922; } .medium .count { color: #d29922; }
+        .low { border-color: #58a6ff; } .low .count { color: #58a6ff; }
+        .info { border-color: #8b949e; } .info .count { color: #8b949e; }
+        .finding { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+        .finding.sev-CRITICAL { border-left: 3px solid #ff7b72; }
+        .finding.sev-HIGH { border-left: 3px solid #f85149; }
+        .finding.sev-MEDIUM { border-left: 3px solid #d29922; }
+        .finding.sev-LOW { border-left: 3px solid #58a6ff; }
+        .finding.sev-INFO { border-left: 3px solid #8b949e; }
+        .sev-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .sev-CRITICAL .sev-badge { background: #ff7b72; color: #0d1117; }
+        .sev-HIGH .sev-badge { background: #f85149; color: #0d1117; }
+        .sev-MEDIUM .sev-badge { background: #d29922; color: #0d1117; }
+        .sev-LOW .sev-badge { background: #58a6ff; color: #0d1117; }
+        .sev-INFO .sev-badge { background: #8b949e; color: #0d1117; }
+        .finding-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .finding-meta { color: #8b949e; font-size: 0.8rem; }
+        .finding-desc { margin: 0.5rem 0; }
+        .finding-evidence { background: #0d1117; border-radius: 4px; padding: 0.5rem; font-family: monospace; font-size: 0.85rem; margin: 0.5rem 0; }
+        .finding-remediation { color: #7ee787; font-size: 0.9rem; }
+        .references { margin-top: 0.5rem; }
+        .references a { color: #58a6ff; font-size: 0.85rem; }
+        .clean { color: #7ee787; font-size: 1.1rem; margin-top: 2rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>BlockSecScan Report</h1>
+    <div class="meta">
+        <div>Scan ID: <code>{{ result.scan_id }}</code></div>
+        <div>Target: <code>{{ result.target.path }}</code></div>
+        <div>Date: {{ result.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+        <div>Duration: {{ "%.1f"|format(result.duration_seconds) }}s</div>
+    </div>
+
+    <h2>Summary</h2>
+    <div class="summary">
+        <div class="summary-item critical"><div class="count">{{ result.summary.critical }}</div><div class="label">Critical</div></div>
+        <div class="summary-item high"><div class="count">{{ result.summary.high }}</div><div class="label">High</div></div>
+        <div class="summary-item medium"><div class="count">{{ result.summary.medium }}</div><div class="label">Medium</div></div>
+        <div class="summary-item low"><div class="count">{{ result.summary.low }}</div><div class="label">Low</div></div>
+        <div class="summary-item info"><div class="count">{{ result.summary.info }}</div><div class="label">Info</div></div>
+    </div>
+
+    {% if result.findings %}
+    <h2>Findings</h2>
+    {% for f in result.findings|sort(attribute='severity.value', reverse=True) %}
+    <div class="finding sev-{{ f.severity.value }}">
+        <div class="finding-header">
+            <span class="sev-badge">{{ f.severity.value }}</span>
+            <strong>{{ f.title }}</strong>
+        </div>
+        <div class="finding-meta">
+            Rule: <code>{{ f.rule_id }}</code> &middot;
+            File: <code>{{ f.file_path }}</code>
+            {% if f.line_start %} &middot; Line: {{ f.line_start }}{% endif %}
+            &middot; Confidence: {{ "%.0f"|format(f.confidence * 100) }}%
+        </div>
+        <div class="finding-desc">{{ f.description }}</div>
+        <div class="finding-evidence">{{ f.evidence }}</div>
+        <div class="finding-remediation"><strong>Fix:</strong> {{ f.remediation }}</div>
+        {% if f.references %}
+        <div class="references">
+            {% for ref in f.references %}
+            <a href="{{ ref }}" target="_blank">{{ ref }}</a>{% if not loop.last %} &middot; {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="clean">No security issues found.</div>
+    {% endif %}
+</body>
+</html>

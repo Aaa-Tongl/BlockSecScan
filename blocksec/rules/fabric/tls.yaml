@@ -1,0 +1,81 @@
+- id: FABRIC_PEER_TLS_DISABLED
+  name: Peer TLS not enabled
+  category: fabric_config
+  severity: HIGH
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/core.yaml"
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+      - "**/.env"
+  match:
+    type: regex
+    pattern: 'CORE_PEER_TLS_ENABLED\s*=\s*false'
+    case_sensitive: false
+  description: >
+    The peer node has TLS disabled. Without TLS, inter-node communication
+    can be eavesdropped or tampered with by attackers on the network.
+  remediation: >
+    Set CORE_PEER_TLS_ENABLED=true and configure TLS certificates, private key,
+    and root CA files for the peer.
+  references:
+    - https://hyperledger-fabric.readthedocs.io/en/latest/enable_tls.html
+  tags:
+    - tls
+    - peer
+    - encryption
+  enabled: true
+
+- id: FABRIC_ORDERER_TLS_DISABLED
+  name: Orderer TLS not enabled
+  category: fabric_config
+  severity: HIGH
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/orderer.yaml"
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+      - "**/.env"
+  match:
+    type: regex
+    pattern: 'ORDERER_GENERAL_TLS_ENABLED\s*=\s*false'
+    case_sensitive: false
+  description: >
+    The ordering node has TLS disabled. This exposes orderer communication
+    to eavesdropping and tampering risks.
+  remediation: >
+    Set ORDERER_GENERAL_TLS_ENABLED=true and configure the orderer's TLS
+    certificates, private key, and root CA files.
+  references:
+    - https://hyperledger-fabric.readthedocs.io/en/latest/enable_tls.html
+  tags:
+    - tls
+    - orderer
+    - encryption
+  enabled: true
+
+- id: FABRIC_TLS_CLIENT_AUTH_DISABLED
+  name: TLS mutual authentication not enabled
+  category: fabric_config
+  severity: MEDIUM
+  confidence: MEDIUM
+  target:
+    file_globs:
+      - "**/core.yaml"
+      - "**/orderer.yaml"
+  match:
+    type: regex
+    pattern: 'clientAuthRequired\s*:\s*false'
+    case_sensitive: false
+  description: >
+    TLS client authentication (mTLS) is disabled. Without mTLS, the node
+    cannot verify the identity of connecting clients.
+  remediation: >
+    Set clientAuthRequired: true in the TLS configuration section.
+  tags:
+    - tls
+    - mtls
+    - authentication
+  enabled: true

@@ -1,0 +1,77 @@
+- id: FABRIC_CONTAINER_RUNS_AS_ROOT
+  name: Container runs as root user
+  category: fabric_config
+  severity: MEDIUM
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+  match:
+    type: regex
+    pattern: 'user\s*:\s*(root|0)'
+    case_sensitive: false
+  description: >
+    A Fabric container is configured to run as root. This increases the risk
+    of container escape and privilege escalation if the container is
+    compromised.
+  remediation: >
+    Add a non-root user in the Dockerfile and specify 'user: <non-root-uid>'
+    in docker-compose. Fabric containers should not need root privileges.
+  tags:
+    - docker
+    - privilege
+    - root
+  enabled: true
+
+- id: FABRIC_DOCKER_SOCK_MOUNTED
+  name: Docker socket mounted in container
+  category: fabric_config
+  severity: HIGH
+  confidence: HIGH
+  target:
+    file_globs:
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+  match:
+    type: regex
+    pattern: '/var/run/docker\.sock\s*:'
+    case_sensitive: false
+  description: >
+    The Docker socket is mounted inside a Fabric container. This grants the
+    container full control over the Docker daemon, effectively giving it
+    root-level access to the host.
+  remediation: >
+    Remove the docker.sock mount. If container management from within a
+    container is needed, use the Docker API over TCP with TLS instead.
+  tags:
+    - docker
+    - privilege
+    - docker-sock
+  enabled: true
+
+- id: FABRIC_SENSITIVE_HOST_MOUNT
+  name: Sensitive host directory mounted
+  category: fabric_config
+  severity: HIGH
+  confidence: MEDIUM
+  target:
+    file_globs:
+      - "**/docker-compose*.yml"
+      - "**/docker-compose*.yaml"
+  match:
+    type: regex
+    pattern: '-\s*(/etc|/root|/var/run|/proc|/sys)[/\w]*\s*:'
+    case_sensitive: false
+  description: >
+    A sensitive host system directory is mounted into a Fabric container.
+    This could expose host configuration, credentials, or allow container
+    escape.
+  remediation: >
+    Remove the sensitive host mount. Only mount specific directories that
+    are strictly required for the container to function.
+  tags:
+    - docker
+    - host-mount
+    - privilege
+  enabled: true
