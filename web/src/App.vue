@@ -30,11 +30,7 @@ function toggleLang() {
       </div>
     </header>
     <main class="main">
-      <router-view v-slot="{ Component }">
-        <transition name="page-fade" mode="out-in">
-          <component :is="Component" :key="$route.fullPath" />
-        </transition>
-      </router-view>
+      <router-view />
     </main>
   </div>
 </template>
@@ -176,20 +172,6 @@ a:hover {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2.5rem 2rem 4rem;
-}
-
-/* ---- page transitions ---- */
-.page-fade-enter-active,
-.page-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.page-fade-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-.page-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
 }
 
 /* ---- shared components ---- */

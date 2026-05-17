@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { listScans, type ScanListItem } from "../api";
 import { t } from "../i18n";
 import StatCard from "../components/StatCard.vue";
 
 const router = useRouter();
-const route = useRoute();
 const scans = ref<ScanListItem[]>([]);
 const loaded = ref(false);
 
@@ -22,7 +21,6 @@ async function fetchData() {
 }
 
 onMounted(fetchData);
-watch(() => route.fullPath, fetchData);
 
 const totalScans = () => scans.value.length;
 const totalHigh = () => scans.value.reduce((s, sc) => s + (sc.summary?.critical || 0) + (sc.summary?.high || 0), 0);
