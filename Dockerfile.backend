@@ -2,7 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e ".[web]" && pip install --no-cache-dir uvicorn
+RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -e ".[web]" \
+    && pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uvicorn
 COPY blocksec/ ./blocksec/
 COPY labs/ ./labs/
 
