@@ -1,0 +1,11 @@
+{
+  "target": "rpc-exposed",
+  "expected_min_findings": 2,
+  "expected_rule_ids": [
+    "WEB3_PRIVATE_KEY_HARDCODED",
+    "WEB3_INFURA_KEY_LEAK",
+    "WEB3_DANGEROUS_APPROVE",
+    "WEB3_RAW_SIGN_MESSAGE",
+    "WEB3_CONTRACT_ADDRESS_HARDCODED"
+  ]
+}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>DApp</title></head>
+<body>
+  <h1>My DApp</h1>
+  <script>
+    // ⚠️ VULNERABILITY: Hardcoded private key
+    const PRIVATE_KEY = "0x4c0883a69102937d6231471b5dbb6204fe512961708279d1bf6b2c43ee8f15ab";
+
+    // ⚠️ VULNERABILITY: Exposed Infura key
+    const INFURA_URL = "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
+
+    // ⚠️ VULNERABILITY: Unlimited approve
+    const MAX_UINT = ethers.MaxUint256;
+    token.approve(spender, MAX_UINT);
+
+    // ⚠️ VULNERABILITY: Raw signMessage
+    await provider.send("eth_sign", [account, hash]);
+
+    // ⚠️ VULNERABILITY: Hardcoded contract address
+    const CONTRACT_ADDRESS = "0x1234567890123456789012345678901234567890";
+  </script>
+</body>
+</html>

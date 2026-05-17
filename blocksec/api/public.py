@@ -8,7 +8,9 @@ from blocksec.models.scan import ScanResult, ScanTarget
 from blocksec.rule_engine.parser import RuleParser
 from blocksec.scanners.fabric_config.scanner import FabricConfigScanner
 from blocksec.scanners.fabric_runtime.scanner import FabricRuntimeScanner
+from blocksec.scanners.rpc.scanner import RpcScanner
 from blocksec.scanners.smart_contract.scanner import SmartContractScanner
+from blocksec.scanners.web3.scanner import Web3Scanner
 
 _engine: CoreEngine | None = None
 
@@ -20,6 +22,8 @@ def _get_engine() -> CoreEngine:
         registry.register(FabricConfigScanner())
         registry.register(FabricRuntimeScanner())
         registry.register(SmartContractScanner())
+        registry.register(RpcScanner())
+        registry.register(Web3Scanner())
         _engine = CoreEngine(registry, settings.resolved_rules_dir)
     return _engine
 

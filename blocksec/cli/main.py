@@ -138,6 +138,69 @@ def scan_contract(
     console.print(f"\n[dim]Report saved to {actual_output}[/dim]")
 
 
+# ── scan rpc ───────────────────────────────────────────────────
+
+@scan_app.command(name="rpc")
+def scan_rpc(
+    target: str = typer.Option(..., "--target", "-t", help="RPC endpoint URL (e.g. http://127.0.0.1:8545)"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output report file path"),
+    fmt: str = typer.Option("json", "--format", "-f", help="Report format: json, markdown, html, sarif"),
+):
+    """Scan Ethereum JSON-RPC endpoint for security misconfigurations.
+
+    Checks for exposed admin/personal/debug namespaces, CORS, TLS, and more.
+    """
+    msg = "[yellow]Only scan endpoints you own or have explicit authorization to test.[/yellow]"
+    console.print(Panel.fit(msg, border_style="yellow"))
+    console.print()
+
+    host = target.split("://")[-1].split(":")[0] if "://" in target else target.split(":")[0]
+    scan_target = ScanTarget(target_type="rpc", path=target, options={"host": host})
+
+    with console.status(f"[bold green]Probing {target}..."):
+        result = scan(scan_target)
+
+    _print_result(result)
+
+    if result.findings:
+        actual_output = output or f"rpc-result.{fmt}"
+        generate_report(result, fmt=fmt, output_path=actual_output)
+        console.print(f"\n[dim]Report saved to {actual_output}[/dim]")
+
+
+# ── scan web3 ──────────────────────────────────────────────────
+
+@scan_app.command(name="web3")
+def scan_web3(
+    path: str = typer.Option(..., "--path", "-p", help="Path to Web3 frontend project"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output report file path"),
+    fmt: str = typer.Option("json", "--format", "-f", help="Report format: json, markdown, html, sarif"),
+):
+    """Scan Web3 frontend source code for security issues.
+
+    Detects: hardcoded private keys, mnemonic leaks, RPC key exposure,
+    dangerous token approvals, missing CSP, and more.
+    """
+    console.print(Panel.fit(DISCLAIMER, border_style="yellow"))
+    console.print()
+
+    target_path = Path(path).resolve()
+    if not target_path.exists():
+        console.print(f"[red]Error:[/red] Path not found: {target_path}")
+        raise typer.Exit(code=1)
+
+    scan_target = ScanTarget(target_type="web3", path=str(target_path))
+
+    with console.status(f"[bold green]Scanning {target_path}..."):
+        result = scan(scan_target)
+
+    _print_result(result)
+
+    actual_output = output or f"web3-result.{fmt}"
+    generate_report(result, fmt=fmt, output_path=actual_output)
+    console.print(f"\n[dim]Report saved to {actual_output}[/dim]")
+
+
 # ── rules list ──────────────────────────────────────────────────
 
 @rules_app.command(name="list")
