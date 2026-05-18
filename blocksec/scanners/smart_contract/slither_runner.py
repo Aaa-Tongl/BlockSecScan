@@ -64,11 +64,34 @@ def _ensure_solc_for_files(project_path: str):
             if f.endswith(".sol"):
                 version = _detect_solc_version(os.path.join(sol_dir, f))
                 if version:
-                    subprocess.run(
-                        ["solc-select", "use", version, "--always-install"],
-                        capture_output=True, timeout=60,
-                    )
+                    _try_switch_solc(version)
                     return
+
+
+def _try_switch_solc(version: str):
+    """Try switching solc; fall back to available versions. No network timeouts."""
+    try:
+        r = subprocess.run(
+            ["solc-select", "use", version, "--always-install"],
+            capture_output=True, timeout=10,
+        )
+        if r.returncode == 0:
+            return
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    # If exact version failed, try existing installed version: strip patch to major.minor
+    parts = version.split(".")
+    if len(parts) >= 2:
+        major_minor = f"{parts[0]}.{parts[1]}"
+        # List installed versions and pick closest
+        try:
+            r = subprocess.run(["solc-select", "versions"], capture_output=True, text=True, timeout=5)
+            installed = [v.strip() for v in r.stdout.splitlines() if v.strip().startswith(major_minor)]
+            if installed:
+                subprocess.run(["solc-select", "use", installed[-1]], capture_output=True, timeout=10)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
 
 
 def _find_sol_dirs(root: str) -> list[str]:
