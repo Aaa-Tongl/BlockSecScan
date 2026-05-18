@@ -20,26 +20,81 @@ def run_slither(project_path: str) -> list[Finding]:
     if not os.path.isdir(project_path):
         return []
 
-    contracts_dir = os.path.join(project_path, "contracts")
-    scan_dir = contracts_dir if os.path.isdir(contracts_dir) else project_path
+    _ensure_solc_for_files(project_path)
 
+    # Case 1+2: Single project with contracts/ or build config
+    if _is_structured_project(project_path):
+        return _run_slither_once([".", "--json", "-"], project_path)
+
+    # Case 3: Flat dirs — scan each subdirectory containing .sol files
+    all_findings: list[Finding] = []
+    seen: set[str] = set()
+    for sol_dir in _find_sol_dirs(project_path):
+        findings = _run_slither_once([sol_dir, "--solc", "solc", "--json", "-"], sol_dir)
+        for f in findings:
+            key = f"{f.rule_id}:{f.file_path}:{f.line_start}"
+            if key not in seen:
+                seen.add(key)
+                all_findings.append(f)
+    return all_findings
+
+
+def _run_slither_once(args: list[str], cwd: str) -> list[Finding]:
+    cmd = ["slither", *args]
     try:
-        result = subprocess.run(
-            ["slither", ".", "--json", "-"],
-            cwd=scan_dir,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-    except FileNotFoundError:
+        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=120)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
         return []
-    except subprocess.TimeoutExpired:
-        return []
-
     if result.returncode != 0 and not result.stdout.strip():
         return []
+    return parse_slither_output(result.stdout, cwd)
 
-    return parse_slither_output(result.stdout, scan_dir)
+
+def _is_structured_project(project_path: str) -> bool:
+    if os.path.isdir(os.path.join(project_path, "contracts")):
+        return True
+    config_files = ["foundry.toml", "hardhat.config.js", "hardhat.config.ts", "truffle-config.js"]
+    return any(os.path.isfile(os.path.join(project_path, f)) for f in config_files)
+
+
+def _ensure_solc_for_files(project_path: str):
+    """Switch solc to match pragma version if needed."""
+    for sol_dir in _find_sol_dirs(project_path):
+        for f in os.listdir(sol_dir):
+            if f.endswith(".sol"):
+                version = _detect_solc_version(os.path.join(sol_dir, f))
+                if version:
+                    subprocess.run(
+                        ["solc-select", "use", version, "--always-install"],
+                        capture_output=True, timeout=60,
+                    )
+                return
+
+
+def _find_sol_dirs(root: str) -> list[str]:
+    """Find unique directories containing .sol files."""
+    dirs: set[str] = set()
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for f in filenames:
+            if f.endswith(".sol"):
+                dirs.add(dirpath)
+                break
+    return sorted(dirs)
+
+
+def _detect_solc_version(filepath: str) -> str | None:
+    """Parse `pragma solidity ^X.Y.Z` from a .sol file to find the right solc."""
+    try:
+        with open(filepath, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if "pragma solidity" in line:
+                    import re
+                    m = re.search(r'(\d+\.\d+\.\d+)', line)
+                    if m:
+                        return m.group(1)
+    except OSError:
+        pass
+    return None
 
 
 def parse_slither_output(stdout: str, scan_dir: str) -> list[Finding]:
